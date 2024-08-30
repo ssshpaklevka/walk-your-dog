@@ -5,21 +5,16 @@ import Events from "./features/screens/events/Events";
 import Chat from "./features/screens/chat/Chat";
 import Posts from "./features/screens/posts/Posts";
 import Profile from "./features/screens/profile/Profile";
+import Home from "./features/screens/home/Home";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import useUserStore from "../stores/userStore";
+import CustomHeader from "./features/screens/home/components/CustomHeader";
 
 const Tab = createBottomTabNavigator();
 
-export default function TabNavigator({ route }: any) {
-  const {
-    avatar,
-    name,
-    email,
-    number,
-    valueCity,
-    valueServices,
-    valueAnimals,
-    selectedInterval,
-  } = route.params;
+export default function TabNavigator() {
+
+  const { user } = useUserStore()
 
   return (
     <Tab.Navigator
@@ -32,7 +27,7 @@ export default function TabNavigator({ route }: any) {
         headerStyle: {backgroundColor: "white", borderBottomWidth: 0, shadowOpacity: 0}
       }}
     >
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Events"
         component={Events}
         options={{
@@ -44,6 +39,22 @@ export default function TabNavigator({ route }: any) {
               size={size}
             />
           ),
+        }}
+      /> */}
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          tabBarLabel: "Главная",
+          headerShown: true,
+          tabBarIcon: ({ focused, color, size }) => (
+            <MaterialCommunityIcons
+              name={focused ? "home" : "home-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+          header: props => <CustomHeader {...props} />
         }}
       />
       <Tab.Screen
@@ -75,26 +86,24 @@ export default function TabNavigator({ route }: any) {
         }}
       />
       <Tab.Screen
-        name="Профиль"
+        name="Profile"
         component={Profile}
         options={{
           tabBarLabel: "Профиль",
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={{ uri: avatar }}
-              style={{ width: 30, height: 30, borderRadius: 15 }}
-            />
+          tabBarIcon: ({ focused, color, size }) => (
+            user?.avatar ? (
+              <Image
+                source={{ uri: user.avatar }}
+                style={{ width: 30, height: 30, borderRadius: 15 }}
+              />
+            ) : (
+              <MaterialCommunityIcons
+                name={focused ? "account" : "account-outline"}
+                color={color}
+                size={size}
+              />
+            )
           ),
-        }}
-        initialParams={{
-          avatar,
-          name,
-          email,
-          number,
-          valueCity,
-          valueServices,
-          valueAnimals,
-          selectedInterval,
         }}
       />
     </Tab.Navigator>

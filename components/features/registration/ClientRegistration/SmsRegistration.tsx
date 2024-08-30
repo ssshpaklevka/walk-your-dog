@@ -83,21 +83,25 @@ export default function SmsRegistration() {
 
   useEffect(() => {
     if (code.join("") === "4444") {
-      // Код верный, можете добавить логику перехода на следующее окно
+     
       setCodeError("");
       navigation.navigate("DatingWindow");
-      // Alert.alert("Успех", "Код правильный");
+      
     } else if (
       code.every((digit) => digit !== "") &&
       code.join("") !== "4444"
     ) {
-      // Все инпуты заполнены, но код неверный
+    
       setCodeError("Код неверен");
     } else {
-      // Код еще не полностью введен
+      
       setCodeError("");
     }
   }, [code]);
+
+const handleBack = () => {
+  navigation.goBack();
+}
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -141,7 +145,7 @@ export default function SmsRegistration() {
               <Text style={{ fontSize: 14, fontWeight: 400, color: "#2A2A2A" }}>
                 Код отправлен на номер {route.params.phoneNumber}
               </Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => handleBack}>
                 <Text
                   style={{ fontSize: 14, fontWeight: 500, color: "#2A2A2A" }}
                 >

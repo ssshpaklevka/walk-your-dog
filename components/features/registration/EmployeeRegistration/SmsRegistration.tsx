@@ -83,18 +83,18 @@ export default function SmsRegistration() {
 
   useEffect(() => {
     if (code.join("") === "4444") {
-      // Код верный, можете добавить логику перехода на следующее окно
+
       setCodeError("");
-      navigation.navigate("DatingWindow");
-      // Alert.alert("Успех", "Код правильный");
+      navigation.navigate("DatingWindowClient"); // тут просто если что DatingWindow должен быть
+     
     } else if (
       code.every((digit) => digit !== "") &&
       code.join("") !== "4444"
     ) {
-      // Все инпуты заполнены, но код неверный
+     
       setCodeError("Код неверен");
     } else {
-      // Код еще не полностью введен
+   
       setCodeError("");
     }
   }, [code]);

@@ -7,11 +7,14 @@ import {
   Image,
   TouchableWithoutFeedback,
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DarkButton from "../../../../shared/ui/Button/DarkButton";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 type RootStackParamList = {
   Role: undefined;
@@ -25,6 +28,17 @@ export default function RegistrationEmployee() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [phoneNumber, setPhoneNumber] = React.useState<string>("");
 
+  const handlePhoneNumberChange = (text: string) => {
+    if (!text.startsWith("+7")) {
+      text = "+7" + text.replace(/^\+7/, "");
+    }
+
+    const phoneNumberPattern = /^\+7\d{0,10}$/;
+    if (phoneNumberPattern.test(text)) {
+      setPhoneNumber(text);
+    }
+  };
+
   const handleSmsButton = () => {
     navigation.navigate("SmsRegistration", { phoneNumber });
   };
@@ -33,7 +47,15 @@ export default function RegistrationEmployee() {
   //   navigation.goBack();
   // };
 
+  
+
   return (
+    <KeyboardAwareScrollView
+    style={{ flex: 1 }}
+    contentContainerStyle={{ flexGrow: 1 }}
+    enableOnAndroid={false}
+    extraScrollHeight={100}
+  >
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* <TouchableOpacity onPress={handleGoBack}>
@@ -50,7 +72,7 @@ export default function RegistrationEmployee() {
               style={styles.input}
               placeholder="Номер телефона"
               keyboardType="phone-pad"
-              onChangeText={setPhoneNumber}
+              onChangeText={handlePhoneNumberChange}
               value={phoneNumber}
             />
             <TextInput
@@ -88,6 +110,7 @@ export default function RegistrationEmployee() {
         </View>
       </View>
     </TouchableWithoutFeedback>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -95,6 +118,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
+    backgroundColor: "white"
   },
   image: {
     marginTop: 80,

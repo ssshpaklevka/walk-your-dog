@@ -2,8 +2,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text, View, StyleSheet } from "react-native";
 
 type Interface = {
-    title: string;
-    info: string;
+    title: string | undefined;
+    info: string | undefined;
 }
 
 export default function InfoInput({title, info}: Interface) {

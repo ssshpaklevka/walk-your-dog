@@ -14,10 +14,10 @@ interface ModalProfile {
   modalVisible: boolean;
   setModalVisible: (visible: boolean) => void;
   title: string;
-  infoBlock: string | string[];
+  infoBlock: string | string[] | undefined;
   avatar?: string;
   name?: string;
-  placeholder: string;
+  placeholder: string | undefined;
   onSave: (newValue: string) => void;
   //   email?: string;
   //   number?: string;
@@ -60,18 +60,19 @@ ModalProfile) {
       }}
     >
       <View style={styles.modalView}>
-        <View>
+        <View style={styles.infoUser}>
           <Image
             source={{ uri: avatar }}
             style={{ width: 93, height: 93, borderRadius: 9999 }}
           />
-          <Text>{name}</Text>
+          <Text style={{fontSize: 24, fontWeight: 500}}>{name}</Text>
         </View>
-        <View>
-          <Text>{title}</Text>
+        <View style={styles.infoInput}>
+          <Text style={{fontSize: 12, fontWeight: 400, color: "#B8B8B8"}}>{title}</Text>
           <TextInput
-            placeholder={placeholder}
-            // value={inputValue}
+          style={styles.textInput}
+            // placeholder={name}
+            value={inputValue}
             onChangeText={setInputValue}
           />
         </View>
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     paddingTop: 35,
     paddingHorizontal: 15,
     paddingBottom: 15,
-    alignItems: "center",
+    // alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -106,6 +107,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+  infoUser: {
+    alignItems: "center",
+    gap: 10
+  },
+  infoInput: {
+    gap: 3
+  },
+  textInput: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: "black"
   },
   modalText: {
     textAlign: "center",

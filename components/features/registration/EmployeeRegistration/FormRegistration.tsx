@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,42 +10,66 @@ import {
   Keyboard,
   Alert,
   Linking,
-  ScrollView,
 } from "react-native";
+import { useForm, Controller } from "react-hook-form";
 import * as ImagePicker from "expo-image-picker";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DarkButton from "../../../../shared/ui/Button/DarkButton";
 import ModalTime from "./_components/ModalTime";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../../../shared/types/typesRegistrationNavigations";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import useUserStore from "../../../../stores/userStore";
+import { UserInterface } from "../../../../shared/types/user";
+
 type ItemType = {
   label: string;
   value: string;
 };
+
 export default function FormRegistration() {
   const insets = useSafeAreaInsets();
   const [avatar, setAvatar] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [number, setNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = React.useState<string>("+7");
   const [openCity, setOpenCity] = useState(false);
   const [openServices, setOpenServices] = useState(false);
   const [openAnimals, setOpenAnimals] = useState(false);
-  const [valueCity, setValueCity] = useState(null);
-  const [valueServices, setValueServices] = useState<string[]>([]); // Изменено на массив
-  const [valueAnimals, setValueAnimals] = useState<string[]>([]); // Изменено на массив
-  
-  const [items, setItems] = useState<ItemType[]>([
-    { label: "Option 1", value: "option1" },
-    { label: "Option 2", value: "option2" },
-    { label: "Option 3", value: "option3" },
+  const [cityItems, setCityItems] = useState<ItemType[]>([
+    { label: "Москва", value: "city1" },
+    { label: "Санкт-Петербург", value: "city2" },
+    { label: "Казань", value: "city3" },
+    { label: "Краснодар", value: "city4" },
   ]);
-  
+
+  const [serviceItems, setServiceItems] = useState<ItemType[]>([
+    { label: "Выгул", value: "service1" },
+    { label: "Няня", value: "service2" },
+    { label: "Ситтер", value: "service3" },
+  ]);
+
+  const [animalItems, setAnimalItems] = useState<ItemType[]>([
+    { label: "Кошки", value: "animal1" },
+    { label: "Собаки", value: "animal2" },
+    { label: "Птицы", value: "animal3" },
+    { label: "Грызуны", value: "animal4" },
+  ]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedInterval, setSelectedInterval] = useState("");
+
+  const { control, handleSubmit, setValue, watch } = useForm<UserInterface>({
+    defaultValues: {
+      name: "",
+      email: "",
+      number: "",
+      valueCity: "",
+      valueServices: [],
+      valueAnimals: [],
+      selectedInterval: "",
+    },
+  });
+
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -66,41 +90,66 @@ export default function FormRegistration() {
       Linking.openSettings();
     }
   };
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-const clickEndReg = () => {
-  navigation.navigate("TabNavigator", {
-    avatar,
-    name,
-    email,
-    number,
-    valueCity,
-    valueServices,
-    valueAnimals,
-    selectedInterval,
-  })
-}
+  const handlePhoneNumberChange = (text: string) => {
+    if (!text.startsWith("+7")) {
+      text = "+7" + text.replace(/^\+7/, "");
+    }
 
-  const handleGoBack = () => {
-    navigation.goBack();
+    const phoneNumberPattern = /^\+7\d{0,10}$/;
+    if (phoneNumberPattern.test(text)) {
+      setPhoneNumber(text);
+    }
   };
 
-  
+  const newUser = useUserStore((state) => state.newUser);
+
+  const onSubmit = (data: Omit<UserInterface, "avatar">) => {
+    const userData: UserInterface = {
+      ...data,
+      avatar: avatar || "",
+    };
+    newUser(userData);
+    console.log(userData);
+    navigation.navigate("TabNavigator");
+  };
+
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+
+  const handleServiceChange = (value: string[]) => {
+    const selectedLabels = getLabelsFromValues(serviceItems, value);
+    setSelectedServices(selectedLabels); 
+};
+
+  const [selectedAnimals, setSelectedAnimals] = useState<string[]>([]);
+
+  const handleAnimalChange = (value: string[]) => {
+    const selectedLabels = getLabelsFromValues(animalItems, value);
+    setSelectedAnimals(selectedLabels); 
+};
+
+  useEffect(() => {
+    setValue("valueServices", selectedServices);
+  }, [selectedServices]);
+
+  useEffect(() => {
+    setValue("valueAnimals", selectedAnimals);
+  }, [selectedAnimals]);
+
+  const getLabelsFromValues = (items: ItemType[], values: string[]) => {
+    return items
+        .filter(item => values.includes(item.value))
+        .map(item => item.label);
+};
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
-      
-          {/* <TouchableOpacity onPress={handleGoBack}>
-            <MaterialIcons name="keyboard-backspace" size={24} color="black" />
-          </TouchableOpacity> */}
-          <Text style={{ fontSize: 20, fontWeight: 500 }}>
-            Давайте знакомиться!
-          </Text>
-          <Text style={{ fontSize: 18, fontWeight: 400 }}>
-            Расскажите о себе
-          </Text>
-     
+        <Text style={{ fontSize: 20, fontWeight: 500 }}>
+          Давайте знакомиться!
+        </Text>
+        <Text style={{ fontSize: 18, fontWeight: 400 }}>Расскажите о себе</Text>
+
         <TouchableOpacity onPress={pickImage}>
           {avatar ? (
             <Image source={{ uri: avatar }} style={styles.avatar} />
@@ -110,90 +159,147 @@ const clickEndReg = () => {
             </View>
           )}
         </TouchableOpacity>
+
         <View style={styles.form}>
-          <DropDownPicker
-            open={openCity}
-            value={valueCity}
-            items={items}
-            setOpen={setOpenCity}
-            setValue={setValueCity}
-            setItems={setItems}
-            style={styles.input}
-            placeholder="Выберите свой город"
-            dropDownContainerStyle={styles.input}
+          <Controller
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <DropDownPicker
+                open={openCity}
+                value={value}
+                items={cityItems}
+                setOpen={setOpenCity}
+                setValue={(callback) => {
+                  const newValue =
+                    typeof callback === "function" ? callback(value) : callback;
+                  onChange(newValue);
+                }}
+                setItems={setCityItems}
+                style={styles.input}
+                placeholder="Выберите свой город"
+                dropDownContainerStyle={styles.input}
+              />
+            )}
+            name="valueCity"
           />
-          <TextInput
-            style={styles.input}
-            keyboardType="default"
-            onChangeText={setName}
-            placeholder="Имя"
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                placeholder="Имя"
+              />
+            )}
+            name="name"
           />
-          <TextInput
-            style={styles.input}
-            keyboardType="phone-pad"
-            onChangeText={setNumber}
-            placeholder="Номер телефона"
+
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                onBlur={onBlur}
+                onChangeText={handlePhoneNumberChange}
+                value={phoneNumber}
+                placeholder="Номер телефона"
+                keyboardType="phone-pad"
+              />
+            )}
+            name="number"
           />
-          <TextInput
-            style={styles.input}
-            keyboardType="email-address"
-            onChangeText={setEmail}
-            placeholder="Электронная почта"
+
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                placeholder="Электронная почта"
+                keyboardType="email-address"
+              />
+            )}
+            name="email"
           />
-          <DropDownPicker
-            open={openServices}
-            value={valueServices} // Массив значений
-            items={items}
-            setOpen={setOpenServices}
-            setValue={setValueServices} // Установка значения
-            setItems={setItems}
-            multiple={true} // Указываем, что это множественный выбор
-            onChangeValue={(values) => {
-              setValueServices(values as string[]); // Обновляем массив значений
-            }}
-            style={styles.input}
-            placeholder="Услуги"
-            dropDownContainerStyle={styles.input}
+
+          <Controller
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <DropDownPicker
+                open={openServices}
+                value={value}
+                items={serviceItems}
+                setOpen={setOpenServices}
+                setValue={setSelectedServices}
+                setItems={setServiceItems}
+                multiple={true}
+                multipleText={getLabelsFromValues(serviceItems, value).join(", ")}
+                style={styles.input}
+                placeholder="Услуги"
+                dropDownContainerStyle={styles.input}
+                
+              />
+            )}
+            name="valueServices"
           />
+
           <TouchableOpacity onPress={() => setModalVisible(true)}>
             <View style={styles.falseInput}>
               <TextInput
                 editable={false}
-                value={selectedInterval}
+                value={watch("selectedInterval")}
                 placeholder="Выберите интервал для работы"
                 placeholderTextColor="#9D9D9D"
                 style={[
-                  selectedInterval ? styles.inputText : styles.placeholderText,
+                  watch("selectedInterval")
+                    ? styles.inputText
+                    : styles.placeholderText,
                 ]}
               />
             </View>
           </TouchableOpacity>
 
-          <DropDownPicker
-            open={openAnimals}
-            items={items}
-            multiple={true} // Указываем, что это множественный выбор
-            value={valueAnimals} // Массив значений
-            setOpen={setOpenAnimals}
-            setValue={setValueAnimals} // Установка значения
-            setItems={setItems}
-            onChangeValue={(values) => {
-              setValueAnimals(values as string[]); // Обновляем массив значений
-            }}
-            style={styles.input}
-            placeholder="Животные"
-            dropDownContainerStyle={[styles.input, styles.dropdownContainer]}
+          <Controller
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <DropDownPicker
+                open={openAnimals}
+                items={animalItems}
+                multiple={true}
+                multipleText={getLabelsFromValues(animalItems, value).join(", ")}
+                min={0}
+                max={10}
+                value={value}
+                setOpen={setOpenAnimals}
+                setValue={setSelectedAnimals}
+                setItems={setAnimalItems}
+                style={styles.input}
+                placeholder="Животные"
+                dropDownContainerStyle={[
+                  styles.input,
+                  styles.dropdownContainer,
+                ]}
+              />
+            )}
+            name="valueAnimals"
           />
         </View>
-        <DarkButton title="Продолжить" onPress={clickEndReg}/>
 
-        {/* Модальное окно для выбора интервала времени */}
+        <DarkButton title="Продолжить" onPress={handleSubmit(onSubmit)} />
+
         <ModalTime
           modalVisible={modalVisible}
           setModalVisible={setModalVisible}
-          selectedInterval={selectedInterval}
-          setSelectedInterval={setSelectedInterval}
+          selectedInterval={watch("selectedInterval")}
+          setSelectedInterval={(interval) =>
+            setValue("selectedInterval", interval)
+          }
         />
+
         <View style={styles.downText}>
           <Text style={{ fontSize: 14, fontWeight: "400" }}>
             Связаться с поддержкой
@@ -251,10 +357,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   inputText: {
-    color: "#000000", // черный цвет для выбранного интервала
+    color: "#000000",
   },
   placeholderText: {
-    color: "#9D9D9D", // серый цвет для плейсхолдера
+    color: "#9D9D9D",
   },
   dropdown: {
     borderBottomWidth: 1,
