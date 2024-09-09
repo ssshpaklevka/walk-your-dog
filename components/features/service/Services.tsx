@@ -126,9 +126,12 @@ export default function Services() {
     const totalCost = selectedServiceDetails.reduce((sum, service) => sum + service.price, 0);
 
     const orderDetails: OrderDetails = {
-      selectedAnimal,
+      selectedAnimal: {
+        ...selectedAnimal,
+        birthday: selectedAnimal.birthday ? new Date(selectedAnimal.birthday) : undefined,
+      },
       selectedServices: selectedServiceDetails,
-      selectedDate,
+      selectedDate: selectedDate.toISOString(),
       selectedTime,
       selectedRepeat,
       totalCost,

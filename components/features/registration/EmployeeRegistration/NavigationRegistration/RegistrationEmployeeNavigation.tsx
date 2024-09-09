@@ -27,22 +27,22 @@ export default function RegistrationEmployeeNavigation() {
       <Stack.Navigator>
         <Stack.Screen name="Slide" component={Slide}  options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="Role" component={Role}  options={{ headerShown: false }} />
-        <Stack.Screen name="RegistrationEmployee" component={RegistrationEmployee}  options={{ headerShown: false, gestureEnabled: false}} />
-        <Stack.Screen name="SmsRegistration" component={SmsRegistration}  options={{ headerShown: false, gestureEnabled: false}} />
-        <Stack.Screen name="DatingWindow" component={DatingWindow}  options={{ headerShown: false, gestureEnabled: false}} />
-        <Stack.Screen name="FormRegistration" component={FormRegistration}  options={{ headerShown: false, gestureEnabled: false}} />
-        <Stack.Screen name="TabNavigator" component={TabNavigator}  options={{ headerShown: false, gestureEnabled: false}} />
-        <Stack.Screen name="Map" component={Map}  options={{ headerShown: false, gestureEnabled: false}} />
+        <Stack.Screen name="RegistrationEmployee" component={RegistrationEmployee}  options={{ headerShown: false}} />
+        <Stack.Screen name="SmsRegistration" component={SmsRegistration}  options={{ headerShown: false}} />
+        <Stack.Screen name="DatingWindow" component={DatingWindow}  options={{ headerShown: false}} />
+        <Stack.Screen name="FormRegistration" component={FormRegistration}  options={{ headerShown: false}} />
+        <Stack.Screen name="TabNavigator" component={TabNavigator}  options={{ headerShown: false}} />
+        <Stack.Screen name="Map" component={Map}  options={{ headerShown: false}} />
         <Stack.Screen name="Profile" component={Profile}  options={{ headerShown: false, gestureEnabled: false}} />
-         <Stack.Screen name="RegistrationClient" component={RegistrationClient}  options={{ headerShown: false, gestureEnabled: false}} />
-         <Stack.Screen name="DatingWindowClient" component={DatingWindowClient}  options={{ headerShown: false, gestureEnabled: false}} />
-         <Stack.Screen name="RegistrationPeople" component={RegistrationPeople}  options={{ headerShown: false, gestureEnabled: false}} />
-         <Stack.Screen name="RegistrationAnimals" component={RegistrationAnimals}  options={{ headerShown: false, gestureEnabled: false}} />
-         <Stack.Screen name="Reminder" component={Reminder}  options={{ headerShown: false, gestureEnabled: false}} />
+         <Stack.Screen name="RegistrationClient" component={RegistrationClient}  options={{ headerShown: false}} />
+         <Stack.Screen name="DatingWindowClient" component={DatingWindowClient}  options={{ headerShown: false}} />
+         <Stack.Screen name="RegistrationPeople" component={RegistrationPeople}  options={{ headerShown: false}} />
+         <Stack.Screen name="RegistrationAnimals" component={RegistrationAnimals}  options={{ headerShown: false}} />
+         <Stack.Screen name="Reminder" component={Reminder}  options={{ headerShown: false}} />
          <Stack.Screen name="Services" component={Services}  options={{ headerShown: false}} />
-         <Stack.Screen name="OrderDetails" component={OrderDetails}  options={{ headerShown: false, gestureEnabled: false}} />
-         <Stack.Screen name="SelectPeet" component={SelectPeet}  options={{ headerShown: false, gestureEnabled: false}} />
-         <Stack.Screen name="InfoEvent" component={InfoEvent}  options={{ headerShown: false, gestureEnabled: false}} />
+         <Stack.Screen name="OrderDetails" component={OrderDetails}  options={{ headerShown: false}} />
+         <Stack.Screen name="SelectPeet" component={SelectPeet}  options={{ headerShown: false}} />
+         <Stack.Screen name="InfoEvent" component={InfoEvent}  options={{ headerShown: false}} />
         {/* <Stack.Screen name="SmsRegistration" component={SmsRegistration}  options={{ headerShown: false}} />  */}
       </Stack.Navigator>
     </NavigationContainer>

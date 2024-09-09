@@ -12,25 +12,40 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
-  const { user } = useUserStore(); 
+  const { user } = useUserStore();
 
   return (
     <View style={styles.container}>
-      <View style={styles.balance}>
-        <Text style={{ fontSize: 16, fontWeight: 500 }}>
-          Ваш баланс: {user?.balance} ₽
-        </Text>
+      <View style={styles.fullWidthBackground}>
+        <View style={styles.paddedContent}>
+          <View style={styles.balance}>
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>
+              Ваш баланс: {user?.balance} ₽
+            </Text>
+          </View>
+          <Events />
+        </View>
       </View>
-      <Events />
-      <Stories />
+      <View style={styles.paddedContent}>
+        <Stories />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 20,
+    flex: 1,
+    backgroundColor: "white",
+  },
+  fullWidthBackground: {
+    backgroundColor: "#EDEDED",
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  paddedContent: {
     paddingHorizontal: 15,
+    paddingVertical: 20,
     gap: 20,
   },
   balance: {

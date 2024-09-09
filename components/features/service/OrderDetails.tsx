@@ -35,6 +35,11 @@ const OrderDetails = ({
     selectedRepeat,
     totalCost,
   } = route.params;
+  const parsedAnimalBirthday = selectedAnimal.birthday 
+    ? new Date(selectedAnimal.birthday) 
+    : new Date();
+  const parsedSelectedDate = new Date(selectedDate);
+
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user, animals } = useUserStore();
@@ -151,8 +156,8 @@ const OrderDetails = ({
                 </Text>
                 <Ionicons name="ellipse" size={4} color="grey" />
                 <Text style={{ fontSize: 14, fontWeight: 400, color: "grey" }}>
-                  {selectedAnimal.birthday
-                    ? calculateAge(selectedAnimal.birthday.toISOString())
+                  {parsedAnimalBirthday
+                    ? calculateAge(parsedAnimalBirthday.toISOString())
                     : ""}
                 </Text>
               </View>

@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Easing,
   Modal,
+  PanResponder,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,34 +20,37 @@ interface ModalTimeProps {
   setModalVisible: (visible: boolean) => void;
 }
 
+const { height } = Dimensions.get("window");
+
 export default function AddRecord({
   modalVisible,
   setModalVisible,
 }: ModalTimeProps) {
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const panAnim = React.useRef(new Animated.Value(height)).current;
+  const handleAnim = React.useRef(new Animated.Value(0)).current;
   const [overlayVisible, setOverlayVisible] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const navigation = useNavigation();
 
   useEffect(() => {
     if (modalVisible) {
       setOverlayVisible(true);
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
+      Animated.timing(panAnim, {
+        toValue: 0,
         duration: 300,
         useNativeDriver: true,
         easing: Easing.ease,
       }).start();
     } else {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
+      Animated.timing(panAnim, {
+        toValue: height,
         duration: 300,
         useNativeDriver: true,
         easing: Easing.ease,
       }).start(() => setOverlayVisible(false));
     }
-  }, [modalVisible, fadeAnim]);
+  }, [modalVisible, panAnim]);
 
   const navigationReminder = () => {
     setModalVisible(false);
@@ -56,6 +61,60 @@ export default function AddRecord({
     setModalVisible(false);
     navigation.navigate("Services" as never);
   };
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      const { dy } = gestureState;
+      if (dy > 0) {
+        panAnim.setValue(dy);
+        setIsDragging(true);
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      const { dy } = gestureState;
+      const modalHeight = 300; // Высота модального окна
+      const threshold = modalHeight / 2; // Порог для определения, закрывать ли окно
+
+      if (dy > threshold) {
+        // Если свайп был больше половины высоты модального окна, закрываем окно с анимацией
+        Animated.timing(panAnim, {
+          toValue: height,
+          duration: 200,
+          useNativeDriver: true,
+          easing: Easing.ease,
+        }).start(() => {
+          setModalVisible(false);
+          setOverlayVisible(false);
+        });
+      } else {
+        // Если свайп был меньше половины высоты модального окна, возвращаем окно в исходное положение с анимацией
+        Animated.timing(panAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+          easing: Easing.ease,
+        }).start(() => {
+          // Анимация для линии
+          Animated.sequence([
+            Animated.timing(handleAnim, {
+              toValue: -2, // Поднимаем линию на 10 пикселей вверх
+              duration: 150,
+              useNativeDriver: true,
+              easing: Easing.ease,
+            }),
+            Animated.timing(handleAnim, {
+              toValue: 0, // Возвращаем линию в исходное положение
+              duration: 150,
+              useNativeDriver: true,
+              easing: Easing.ease,
+            }),
+          ]).start();
+        });
+      }
+      setIsDragging(false);
+    },
+  });
 
   return (
     <Modal
@@ -68,24 +127,30 @@ export default function AddRecord({
     >
       {overlayVisible && (
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <Animated.View style={[styles.overlay, { opacity: fadeAnim }]} />
+          <View style={styles.overlay} />
         </TouchableWithoutFeedback>
       )}
       <Animated.View
+        {...panResponder.panHandlers}
         style={[
           styles.modalView,
           {
             transform: [
               {
-                translateY: fadeAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [300, 0],
-                }),
+                translateY: panAnim,
               },
             ],
           },
         ]}
       >
+        <Animated.View
+          style={[
+            styles.handle,
+            {
+              transform: [{ translateY: handleAnim }],
+            },
+          ]}
+        />
         <Text style={{ fontSize: 16, fontWeight: 500 }}>
           Добавить новую запись
         </Text>
@@ -120,7 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingTop: 35,
+    paddingTop: 20,
     paddingHorizontal: 15,
     paddingBottom: 15,
     alignItems: "center",
@@ -137,5 +202,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+  handle: {
+    width: "40%",
+    height: 5,
+    borderRadius: 5,
+    backgroundColor: "#51582F",
   },
 });

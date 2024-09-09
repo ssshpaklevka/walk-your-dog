@@ -23,6 +23,13 @@ export default function SelectPets({onAnimalSelect}:AnimalSelect) {
 
   useEffect(() => {
     if (animals.length > 0) {
+      const selectedAnimal = {
+        ...animals[selectedAnimalIndex],
+        birthday: animals[selectedAnimalIndex].birthday
+          ? animals[selectedAnimalIndex].birthday.toISOString()
+          : undefined, // Если birthday undefined, оставляем его undefined
+      };
+      
       onAnimalSelect(animals[selectedAnimalIndex]);
     }
   }, [selectedAnimalIndex, animals, onAnimalSelect]);

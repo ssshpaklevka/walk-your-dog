@@ -26,7 +26,7 @@ export type RootStackParamList = {
   export interface OrderDetails {
     selectedAnimal: AnimalInterface;
     selectedServices: ServiceDetail[];
-    selectedDate: Date;
+    selectedDate: Date | string;
     selectedTime: string;
     selectedRepeat: string;
     totalCost: number;
