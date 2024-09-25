@@ -26,8 +26,9 @@ export default function AddRecord({
   modalVisible,
   setModalVisible,
 }: ModalTimeProps) {
-  const panAnim = React.useRef(new Animated.Value(height)).current;
-  const handleAnim = React.useRef(new Animated.Value(0)).current;
+  const panAnim = React.useRef(new Animated.Value(height)).current; // для модалки
+  const handleAnim = React.useRef(new Animated.Value(0)).current; // для линии
+  const opacityAnim = useRef(new Animated.Value(0)).current; // для прозрачности
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -35,22 +36,40 @@ export default function AddRecord({
 
   useEffect(() => {
     if (modalVisible) {
-      setOverlayVisible(true);
-      Animated.timing(panAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }).start();
+      // Сброс значения panAnim перед началом анимации
+      panAnim.setValue(height);
+
+      Animated.parallel([
+        Animated.timing(panAnim, {
+          toValue: 0,
+          duration: 400, // Увеличьте продолжительность для более плавной анимации
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease), // Используйте более плавную функцию сглаживания
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+      ]).start();
     } else {
-      Animated.timing(panAnim, {
-        toValue: height,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }).start(() => setOverlayVisible(false));
+      Animated.parallel([
+        Animated.timing(panAnim, {
+          toValue: height,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.ease),
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.ease),
+        }),
+      ]).start();
     }
-  }, [modalVisible, panAnim]);
+  }, [modalVisible, panAnim, opacityAnim]);
 
   const navigationReminder = () => {
     setModalVisible(false);
@@ -68,7 +87,6 @@ export default function AddRecord({
       const { dy } = gestureState;
       if (dy > 0) {
         panAnim.setValue(dy);
-        setIsDragging(true);
       }
     },
     onPanResponderRelease: (evt, gestureState) => {
@@ -125,9 +143,28 @@ export default function AddRecord({
         setModalVisible(false);
       }}
     >
-      {overlayVisible && (
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={styles.overlay} />
+      {modalVisible && (
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Animated.parallel([
+              Animated.timing(panAnim, {
+                toValue: height,
+                duration: 300,
+                useNativeDriver: true,
+                easing: Easing.in(Easing.ease),
+              }),
+              Animated.timing(opacityAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+                easing: Easing.in(Easing.ease),
+              }),
+            ]).start(() => {
+              setModalVisible(false);
+            });
+          }}
+        >
+          <Animated.View style={[styles.overlay, { opacity: opacityAnim }]} />
         </TouchableWithoutFeedback>
       )}
       <Animated.View
@@ -140,6 +177,7 @@ export default function AddRecord({
                 translateY: panAnim,
               },
             ],
+            opacity: opacityAnim,
           },
         ]}
       >

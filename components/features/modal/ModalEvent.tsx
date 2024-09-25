@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Easing,
   Modal,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -23,6 +25,8 @@ interface ModalTimeProps {
   onSaveDate: (date: Date, time: string, repeat: string) => void;
 }
 
+const { height } = Dimensions.get("window");
+
 export default function ModalEvent({
   modalVisible,
   setModalVisible,
@@ -31,26 +35,100 @@ export default function ModalEvent({
   onSaveDate,
 }: ModalTimeProps) {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const panAnim = React.useRef(new Animated.Value(height)).current; // для модалки
+  const handleAnim = React.useRef(new Animated.Value(0)).current; // для линии
+  const opacityAnim = React.useRef(new Animated.Value(0)).current; // для прозрачности
   const [overlayVisible, setOverlayVisible] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   useEffect(() => {
     if (modalVisible) {
-      setOverlayVisible(true);
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }).start();
+      // Сброс значения panAnim перед началом анимации
+      panAnim.setValue(height);
+
+      Animated.parallel([
+        Animated.timing(panAnim, {
+          toValue: 0,
+          duration: 400, // Увеличьте продолжительность для более плавной анимации
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease), // Используйте более плавную функцию сглаживания
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+      ]).start();
     } else {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }).start(() => setOverlayVisible(false));
+      Animated.parallel([
+        Animated.timing(panAnim, {
+          toValue: height,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.ease),
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.ease),
+        }),
+      ]).start();
     }
-  }, [modalVisible, fadeAnim]);
+  }, [modalVisible, panAnim, opacityAnim]);
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      const { dy } = gestureState;
+      if (dy > 0) {
+        panAnim.setValue(dy);
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      const { dy } = gestureState;
+      const modalHeight = 300; // Высота модального окна
+      const threshold = modalHeight / 2; // Порог для определения, закрывать ли окно
+
+      if (dy > threshold) {
+        // Если свайп был больше половины высоты модального окна, закрываем окно с анимацией
+        Animated.timing(panAnim, {
+          toValue: height,
+          duration: 200,
+          useNativeDriver: true,
+          easing: Easing.ease,
+        }).start(() => {
+          setModalVisible(false);
+          setOverlayVisible(false);
+        });
+      } else {
+        // Если свайп был меньше половины высоты модального окна, возвращаем окно в исходное положение с анимацией
+        Animated.timing(panAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+          easing: Easing.ease,
+        }).start(() => {
+          // Анимация для линии
+          Animated.sequence([
+            Animated.timing(handleAnim, {
+              toValue: -2, // Поднимаем линию на 10 пикселей вверх
+              duration: 150,
+              useNativeDriver: true,
+              easing: Easing.ease,
+            }),
+            Animated.timing(handleAnim, {
+              toValue: 0, // Возвращаем линию в исходное положение
+              duration: 150,
+              useNativeDriver: true,
+              easing: Easing.ease,
+            }),
+          ]).start();
+        });
+      }
+      setIsDragging(false);
+    },
+  });
 
   const [selectedDay, setSelectedDay] = useState<Date>(selectedDate);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -145,33 +223,59 @@ export default function ModalEvent({
 
   return (
     <Modal
-    animationType="none"
-    transparent={true}
-    visible={modalVisible}
-    onRequestClose={() => {
-      setModalVisible(false);
-    }}
-  >
-    {overlayVisible && (
-      <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-        <Animated.View style={[styles.overlay, { opacity: fadeAnim }]} />
-      </TouchableWithoutFeedback>
-    )}
-    <Animated.View
-      style={[
-        styles.modalView,
-        {
-          transform: [
-            {
-              translateY: fadeAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [300, 0],
-              }),
-            },
-          ],
-        },
-      ]}
+      animationType="none"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => {
+        setModalVisible(false);
+      }}
     >
+      {modalVisible && (
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Animated.parallel([
+              Animated.timing(panAnim, {
+                toValue: height,
+                duration: 300,
+                useNativeDriver: true,
+                easing: Easing.in(Easing.ease),
+              }),
+              Animated.timing(opacityAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+                easing: Easing.in(Easing.ease),
+              }),
+            ]).start(() => {
+              setModalVisible(false);
+            });
+          }}
+        >
+          <Animated.View style={[styles.overlay, { opacity: opacityAnim }]} />
+        </TouchableWithoutFeedback>
+      )}
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.modalView,
+          {
+            transform: [
+              {
+                translateY: panAnim,
+              },
+            ],
+            opacity: opacityAnim,
+          },
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.handle,
+            {
+              transform: [{ translateY: handleAnim }],
+            },
+          ]}
+        />
         <Text style={styles.modalText}>Выбор времени</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {dates.map((date) => (
@@ -282,7 +386,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingTop: 35,
+    paddingTop: 20,
     paddingHorizontal: 15,
     paddingBottom: 15,
     alignItems: "center",
@@ -351,5 +455,11 @@ const styles = StyleSheet.create({
   doneButton: {
     color: "#007AFF",
     fontSize: 16,
+  },
+  handle: {
+    width: "40%",
+    height: 5,
+    borderRadius: 5,
+    backgroundColor: "#51582F",
   },
 });

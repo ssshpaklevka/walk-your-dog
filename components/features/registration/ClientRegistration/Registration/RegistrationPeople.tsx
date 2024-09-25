@@ -34,10 +34,10 @@ export default function RegistrationPeople() {
   const [phoneNumber, setPhoneNumber] = React.useState<string>("+7");
   const [openCity, setOpenCity] = useState(false);
   const [cityItems, setCityItems] = useState<ItemType[]>([
-    { label: "Москва", value: "city1" },
-    { label: "Санкт-Петербург", value: "city2" },
-    { label: "Казань", value: "city3" },
-    { label: "Краснодар", value: "city4" },
+    { label: "Москва", value: "Москва" },
+    { label: "Санкт-Петербург", value: "Санкт-Петербург" },
+    { label: "Казань", value: "Казань" },
+    { label: "Краснодар", value: "Краснодар" },
   ]);
 
   const { control, handleSubmit, setValue, watch } = useForm<UserInterface>({

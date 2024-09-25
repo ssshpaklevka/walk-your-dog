@@ -3,8 +3,8 @@ import { Image, ScrollView, Text, View, StyleSheet, TouchableOpacity } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DarkButton from "../../../../shared/ui/Button/DarkButton";
 import LightButton from "../../../../shared/ui/Button/LightButton";
-import InfoInput from "./_components/InfoInput";
-import ModalProfile from "./_components/Modal/Modal";
+import InfoInput from "./components/InfoInput";
+import ModalProfile from "./components/Modal/Modal";
 import useUserStore from "../../../../stores/userStore";
 import { UserInterface, UserType } from "../../../../shared/types/user";
 import { useNavigation } from "@react-navigation/native";

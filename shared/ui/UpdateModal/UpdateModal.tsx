@@ -3,39 +3,50 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Image,
   Modal,
   PanResponder,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import DarkButton from "../../../../../shared/ui/Button/DarkButton";
+import DarkButton from "../../../shared/ui/Button/DarkButton";
+import DropDownPicker from "react-native-dropdown-picker";
 
-interface ModalTimeProps {
+interface ModalUpdateProps {
   modalVisible: boolean;
   setModalVisible: (visible: boolean) => void;
-  selectedInterval: string;
-  setSelectedInterval: (interval: string) => void;
+  initialValue: string;
+  onSave: (value: string) => void;
+  url: string;
+  name: string;
+  title: string;
 }
 
 const { height } = Dimensions.get("window");
 
-export default function ModalTime({
+export default function UpdateModal({
   modalVisible,
   setModalVisible,
-  selectedInterval,
-  setSelectedInterval
-}: ModalTimeProps) {
+  initialValue,
+  onSave,
+  url,
+  name,
+  title,
+}: ModalUpdateProps) {
   const panAnim = React.useRef(new Animated.Value(height)).current; // для модалки
   const handleAnim = React.useRef(new Animated.Value(0)).current; // для линии
   const opacityAnim = React.useRef(new Animated.Value(0)).current; // для прозрачности
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  const [value, setValue] = useState(initialValue);
   useEffect(() => {
     if (modalVisible) {
       // Сброс значения panAnim перед началом анимации
@@ -126,59 +137,6 @@ export default function ModalTime({
     },
   });
 
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [activeInput, setActiveInput] = useState<'start' | 'end' | null>(null);
-
-  const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-
-  const handleDayPress = (day: string) => {
-    setSelectedDays((prevDays) =>
-      prevDays.includes(day)
-        ? prevDays.filter((d) => d !== day)
-        : [...prevDays, day]
-    );
-  };
-
-  const handleTimeChange = (event: any, selectedDate: Date | undefined) => {
-    const currentDate = selectedDate || new Date();
-    if (activeInput === 'start') {
-      setStartTime(currentDate);
-    } else if (activeInput === 'end') {
-      setEndTime(currentDate);
-    }
-    if (Platform.OS === 'android') {
-      setShowTimePicker(false);
-    }
-  };
-
-  const handleTimePress = (inputType: 'start' | 'end') => {
-    setActiveInput(inputType);
-    setShowTimePicker(true);
-  };
-
-  const handleSave = () => {
-    const days = selectedDays.join(", ");
-    const interval = `${days} ${startTime.toLocaleTimeString('ru-RU', {
-      hour: "2-digit",
-      minute: "2-digit",
-    })} - ${endTime.toLocaleTimeString('ru-RU', {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
-    setSelectedInterval(interval);
-    setModalVisible(false);
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('ru-RU', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <Modal
       animationType="none"
@@ -234,65 +192,26 @@ export default function ModalTime({
             },
           ]}
         />
-      <View style={styles.modalView}>
-        <Text style={styles.modalText}>Выберите интервал времени для работы</Text>
-        <View style={styles.daysContainer}>
-          {daysOfWeek.map((day) => (
-            <TouchableOpacity
-              key={day}
-              onPress={() => handleDayPress(day)}
-              style={[
-                styles.dayButton,
-                selectedDays.includes(day) && styles.selectedDayButton,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.dayButtonText,
-                  selectedDays.includes(day) && styles.selectedDayButtonText,
-                ]}
-              >
-                {day}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.infoUser}>
+          <Image
+            source={{ uri: url }}
+            style={{ width: 93, height: 93, borderRadius: 9999 }}
+          />
+          <Text style={{ fontSize: 24, fontWeight: 500 }}>{name}</Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => handleTimePress('start')}
-        >
-            <Text style={{fontSize: 10, fontWeight: 400, paddingBottom: 2}}>Начало работы</Text>
-          <Text style={{fontSize: 16, fontWeight: 500}}>{formatTime(startTime)}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => handleTimePress('end')}
-        >
-            <Text style={{fontSize: 10, fontWeight: 400, paddingBottom: 2}}>Конец работы</Text>
-          <Text style={{fontSize: 16, fontWeight: 500}}>{formatTime(endTime)}</Text>
-        </TouchableOpacity>
-
-        {showTimePicker && (
-         <DateTimePicker
-         value={activeInput === 'start' ? startTime : endTime}
-         mode="time"
-         is24Hour={true}
-         display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-         onChange={handleTimeChange}
-         textColor="black" 
-       />
-        )}
-
-        {/* {Platform.OS === 'ios' && showTimePicker && (
-          <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-            <Text style={styles.doneButton}>Готово</Text>
-          </TouchableOpacity>
-        )} */}
-
-        <DarkButton title="Сохранить" onPress={handleSave}/>
-      </View>
+        <View style={styles.infoInput}>
+          <Text style={{ fontSize: 12, fontWeight: 400, color: "#B8B8B8" }}>
+            {title}
+          </Text>
+          <TextInput
+            style={styles.textInput}
+            value={value}
+            onChangeText={setValue}
+            placeholder={initialValue} // Это для случая, если initialValue будет пустым
+            placeholderTextColor="black"
+          />
+        </View>
+        <DarkButton title="Изменить" onPress={() => onSave(value)} />
       </Animated.View>
     </Modal>
   );
@@ -303,20 +222,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(255, 255, 255, 0.5)",
   },
-  handle: {
-    width: "40%",
-    height: 5,
-    borderRadius: 5,
-    backgroundColor: "#51582F",
+  dateButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    borderRadius: 11,
+    marginRight: 5,
+    backgroundColor: "#F4F4F4",
+    alignItems: "center",
   },
+  selectedDateButton: {
+    backgroundColor: "#E7EFBE",
+    borderColor: "#E7EFBE",
+  },
+  dateText: {
+    fontSize: 14,
+  },
+  selectedDateText: {},
+  dayOfWeekText: {
+    fontSize: 12,
+    fontWeight: 500,
+    color: "C0C0C0",
+  },
+  selectedDayOfWeekText: {},
   modalView: {
     gap: 14,
     height: "auto",
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingTop: 35,
+    paddingTop: 20,
     paddingHorizontal: 15,
     paddingBottom: 15,
     alignItems: "center",
@@ -329,7 +264,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     zIndex: 5,
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -369,10 +304,43 @@ const styles = StyleSheet.create({
     borderBottomColor: "#C5C5C5",
     width: "100%",
     paddingHorizontal: 10,
-    justifyContent: 'center',
+    justifyContent: "center",
+  },
+  inputDrop: {
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    borderRadius: 0,
+    borderBottomColor: "#C5C5C5",
+  },
+  inputDropDown: {
+    height: 130,
+    borderRadius: 10,
+    borderColor: "#C5C5C5",
   },
   doneButton: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 16,
+  },
+  handle: {
+    marginBottom: 25,
+    width: "40%",
+    height: 5,
+    borderRadius: 5,
+    backgroundColor: "#51582F",
+  },
+  infoUser: {
+    alignItems: "center",
+    gap: 10,
+  },
+  infoInput: {
+    width: "100%",
+    gap: 3,
+  },
+  textInput: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "black",
+    borderBottomWidth: 2,
+    borderBottomColor: "#C5C5C5",
   },
 });

@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import useUserStore from "../stores/userStore";
 import CustomHeader from "./features/screens/home/components/CustomHeader";
 import AddRecord from "./features/modal/AddRecord";
+import ProfileClient from "./features/screens/profile/ProfileClient";
 
 const Tab = createBottomTabNavigator();
 
@@ -144,7 +145,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="Profile"
-        component={Profile}
+        component={ProfileClient}
         options={{
           tabBarLabel: "Профиль",
           tabBarIcon: ({ focused, color, size }) => (

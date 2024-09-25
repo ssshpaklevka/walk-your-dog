@@ -8,6 +8,8 @@ import { useState } from "react";
 import Geocoder from 'react-native-geocoding';
 
 
+
+
 export default function Map() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();

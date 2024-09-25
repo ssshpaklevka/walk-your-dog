@@ -8,6 +8,7 @@ import Reminder from "./components/features/reminder/Reminder";
 import Toast, { BaseToast } from 'react-native-toast-message';
 import ToastConfig from "./shared/ui/ToastConfig/ToastConfig";
 
+
 export default function App() {
 
   return (

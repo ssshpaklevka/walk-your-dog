@@ -18,6 +18,8 @@ import SelectPeet from "../../../reminder/SelectPeet";
 import InfoEvent from "../../../reminder/InfoEvent";
 import Services from "../../../service/Services";
 import OrderDetails from "../../../service/OrderDetails";
+import Email from "../../../screens/profile/components/screens/EmailScreens/Email";
+import SmsEmail from "../../../screens/profile/components/screens/EmailScreens/SmsEmail";
 
 const Stack = createNativeStackNavigator();
 
@@ -43,6 +45,8 @@ export default function RegistrationEmployeeNavigation() {
          <Stack.Screen name="OrderDetails" component={OrderDetails}  options={{ headerShown: false}} />
          <Stack.Screen name="SelectPeet" component={SelectPeet}  options={{ headerShown: false}} />
          <Stack.Screen name="InfoEvent" component={InfoEvent}  options={{ headerShown: false}} />
+         <Stack.Screen name="Email" component={Email}  options={{ headerShown: false}} />
+         <Stack.Screen name="SmsEmail" component={SmsEmail}  options={{ headerShown: false}} />
         {/* <Stack.Screen name="SmsRegistration" component={SmsRegistration}  options={{ headerShown: false}} />  */}
       </Stack.Navigator>
     </NavigationContainer>

@@ -11,6 +11,7 @@ interface UserState {
   newAnimal: (animalData: AnimalInterface) => void;
   addEvent: (eventData: EventInterface) => void;
   clearUser: () => void;
+  updateUserField: (field: keyof UserType, value: any) => void;
 }
 
 const useUserStore = create<UserState>((set) => ({
@@ -26,6 +27,9 @@ const useUserStore = create<UserState>((set) => ({
     events: [...state.events, eventData],
   })),
   clearUser: () => set({ user: null, animals: [] }),
+  updateUserField: (field: keyof UserType, value: any) => set((state) => ({
+    user: { ...state.user, [field]: value } as UserType
+  })),
 }));
 
 export default useUserStore;

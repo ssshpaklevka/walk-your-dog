@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Easing,
   Modal,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -20,107 +22,112 @@ interface ModalTimeProps {
   setModalVisible: (visible: boolean) => void;
 }
 
+const { height } = Dimensions.get("window");
+
 export default function ModalInfo({
   modalVisible,
   setModalVisible,
 }: ModalTimeProps) {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const panAnim = React.useRef(new Animated.Value(height)).current; // для модалки
+  const handleAnim = React.useRef(new Animated.Value(0)).current; // для линии
+  const opacityAnim = React.useRef(new Animated.Value(0)).current; // для прозрачности
   const [overlayVisible, setOverlayVisible] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
   useEffect(() => {
     if (modalVisible) {
-      setOverlayVisible(true);
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }).start();
+      // Сброс значения panAnim перед началом анимации
+      panAnim.setValue(height);
+
+      Animated.parallel([
+        Animated.timing(panAnim, {
+          toValue: 0,
+          duration: 400, // Увеличьте продолжительность для более плавной анимации
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease), // Используйте более плавную функцию сглаживания
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+      ]).start();
     } else {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }).start(() => setOverlayVisible(false));
+      Animated.parallel([
+        Animated.timing(panAnim, {
+          toValue: height,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.ease),
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.ease),
+        }),
+      ]).start();
     }
-  }, [modalVisible, fadeAnim]);
+  }, [modalVisible, panAnim, opacityAnim]);
 
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [activeInput, setActiveInput] = useState<"start" | "end" | null>(null);
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      const { dy } = gestureState;
+      if (dy > 0) {
+        panAnim.setValue(dy);
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      const { dy } = gestureState;
+      const modalHeight = 300; // Высота модального окна
+      const threshold = modalHeight / 2; // Порог для определения, закрывать ли окно
 
-  const [openRepeat, setOpenRepeat] = useState(false);
-  const [selectedRepeat, setSelectedRepeat] = useState("Никогда");
-  const [itemsRepeat, setItemsRepeat] = useState([
-    { label: "Пн", value: "Пн" },
-    { label: "Вт", value: "Вт" },
-    { label: "Ср", value: "Ср" },
-    { label: "Чт", value: "Чт" },
-    { label: "Пт", value: "Пт" },
-    { label: "Сб", value: "Сб" },
-    { label: "Вс", value: "Вс" },
-  ]);
+      if (dy > threshold) {
+        // Если свайп был больше половины высоты модального окна, закрываем окно с анимацией
+        Animated.timing(panAnim, {
+          toValue: height,
+          duration: 200,
+          useNativeDriver: true,
+          easing: Easing.ease,
+        }).start(() => {
+          setModalVisible(false);
+          setOverlayVisible(false);
+        });
+      } else {
+        // Если свайп был меньше половины высоты модального окна, возвращаем окно в исходное положение с анимацией
+        Animated.timing(panAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+          easing: Easing.ease,
+        }).start(() => {
+          // Анимация для линии
+          Animated.sequence([
+            Animated.timing(handleAnim, {
+              toValue: -2, // Поднимаем линию на 10 пикселей вверх
+              duration: 150,
+              useNativeDriver: true,
+              easing: Easing.ease,
+            }),
+            Animated.timing(handleAnim, {
+              toValue: 0, // Возвращаем линию в исходное положение
+              duration: 150,
+              useNativeDriver: true,
+              easing: Easing.ease,
+            }),
+          ]).start();
+        });
+      }
+      setIsDragging(false);
+    },
+  });
 
-  const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-
-  const handleDayPress = (day: string) => {
-    setSelectedDays((prevDays) =>
-      prevDays.includes(day)
-        ? prevDays.filter((d) => d !== day)
-        : [...prevDays, day]
-    );
-  };
-
-  const handleTimeChange = (event: any, selectedDate: Date | undefined) => {
-    const currentDate = selectedDate || new Date();
-    if (activeInput === "start") {
-      setStartTime(currentDate);
-    } else if (activeInput === "end") {
-      setEndTime(currentDate);
-    }
-    if (Platform.OS === "android") {
-      setShowTimePicker(false);
-    }
-  };
-
-  const handleTimePress = (inputType: "start" | "end") => {
-    setActiveInput(inputType);
-    setShowTimePicker(true);
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("ru-RU", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Сегодня";
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Завтра";
-    }
-    return date.toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "short",
-    });
-  };
-
-  const formatDayOfWeek = (date: Date) => {
-    return date.toLocaleDateString("ru-RU", { weekday: "short" });
-  };
-
-const handleOk = () => { 
+  const handleOk = () => {
     setModalVisible(false);
-}
+  };
 
   return (
     <Modal
@@ -131,27 +138,53 @@ const handleOk = () => {
         setModalVisible(false);
       }}
     >
-      {overlayVisible && (
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <Animated.View style={[styles.overlay, { opacity: fadeAnim }]} />
+      {modalVisible && (
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Animated.parallel([
+              Animated.timing(panAnim, {
+                toValue: height,
+                duration: 300,
+                useNativeDriver: true,
+                easing: Easing.in(Easing.ease),
+              }),
+              Animated.timing(opacityAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+                easing: Easing.in(Easing.ease),
+              }),
+            ]).start(() => {
+              setModalVisible(false);
+            });
+          }}
+        >
+          <Animated.View style={[styles.overlay, { opacity: opacityAnim }]} />
         </TouchableWithoutFeedback>
       )}
       <Animated.View
+        {...panResponder.panHandlers}
         style={[
           styles.modalView,
           {
             transform: [
               {
-                translateY: fadeAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [300, 0],
-                }),
+                translateY: panAnim,
               },
             ],
+            opacity: opacityAnim,
           },
         ]}
       >
-        <Text  style={{fontSize: 18, fontWeight: 600}}>Выгул для собак</Text>
+        <Animated.View
+          style={[
+            styles.handle,
+            {
+              transform: [{ translateY: handleAnim }],
+            },
+          ]}
+        />
+        <Text style={{ fontSize: 18, fontWeight: 600 }}>Выгул для собак</Text>
 
         <View>
           <Text style={{ textAlign: "center", fontSize: 16, fontWeight: 400 }}>
@@ -160,29 +193,78 @@ const handleOk = () => {
             от профессионального кинолога
           </Text>
         </View>
-        <View style={{gap: 15, width: "100%"}}>
-          <View style={{flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#D9D9D9", paddingBottom: 10, alignItems: "center"  }}>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>Длительность</Text>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>60 минут</Text>
+        <View style={{ gap: 15, width: "100%" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderBottomColor: "#D9D9D9",
+              paddingBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>Длительность</Text>
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>60 минут</Text>
           </View>
-          <View  style={{flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#D9D9D9", paddingBottom: 10, alignItems: "center"  }}>
-            <Text style={{fontSize: 16, fontWeight: 500}}>Помыть лапы после прогулки</Text>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>+450 ₽ </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderBottomColor: "#D9D9D9",
+              paddingBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>
+              Помыть лапы после прогулки
+            </Text>
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>+450 ₽ </Text>
           </View>
-          <View  style={{flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#D9D9D9", paddingBottom: 10, alignItems: "center"  }}>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>Покормить после прогулки</Text>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>+150 ₽ </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderBottomColor: "#D9D9D9",
+              paddingBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>
+              Покормить после прогулки
+            </Text>
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>+150 ₽ </Text>
           </View>
-          <View  style={{flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#D9D9D9", paddingBottom: 10, alignItems: "center"  }}>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>Дрессировка</Text>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>+150 ₽ </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderBottomColor: "#D9D9D9",
+              paddingBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>Дрессировка</Text>
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>+150 ₽ </Text>
           </View>
-          <View  style={{flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#D9D9D9", paddingBottom: 10, alignItems: "center"  }}>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>Грумминг</Text>
-            <Text  style={{fontSize: 16, fontWeight: 500}}>+1250 ₽ </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderBottomColor: "#D9D9D9",
+              paddingBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>Грумминг</Text>
+            <Text style={{ fontSize: 16, fontWeight: 500 }}>+1250 ₽ </Text>
           </View>
         </View>
-        <DarkButton title="Понятно" onPress={handleOk}/>
+        <DarkButton title="Понятно" onPress={handleOk} />
       </Animated.View>
     </Modal>
   );
@@ -222,7 +304,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingTop: 35,
+    paddingTop: 20,
     paddingHorizontal: 30,
     paddingBottom: 15,
     alignItems: "center",
@@ -291,5 +373,11 @@ const styles = StyleSheet.create({
   doneButton: {
     color: "#007AFF",
     fontSize: 16,
+  },
+  handle: {
+    width: "40%",
+    height: 5,
+    borderRadius: 5,
+    backgroundColor: "#51582F",
   },
 });

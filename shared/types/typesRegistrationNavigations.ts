@@ -15,6 +15,8 @@ export type RootStackParamList = {
     OrderDetails: OrderDetails;
     SelectPeet: { serviceName: string }
     InfoEvent: {selectedPet: AnimalInterface, serviceName: string}
+    Email: undefined;
+    SmsEmail: undefined;
   };
 
 
